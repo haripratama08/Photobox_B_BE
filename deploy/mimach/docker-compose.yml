@@ -1,0 +1,15 @@
+services:
+  wa-gateway:
+    container_name: wa-gateway
+    image: mimamch/wa-gateway:latest
+    restart: unless-stopped
+    # Photobox API hanya mendengarkan di 127.0.0.1. Host networking membuat
+    # image_url http://127.0.0.1:3000/photos/... dapat diambil oleh gateway.
+    network_mode: host
+    volumes:
+      - ./wa_credentials:/app/wa_credentials
+      - ./media:/app/media
+    environment:
+      KEY: diceritakita
+      WEBHOOK_BASE_URL: ""
+      REDIS_URL: ""

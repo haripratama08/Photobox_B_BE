@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Photobox A - Kiosk Resolution
+Comment=Set the photobox display to 1280x800 after graphical login
+Exec=/usr/bin/xrandr -s 1280x800
+OnlyShowIn=GNOME;XFCE;MATE;LXQt;LXDE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

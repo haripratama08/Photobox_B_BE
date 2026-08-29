@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "box_id": "Box A",
+  "camera": {
+    "serial": "",
+    "vendor_id": "04a9",
+    "product_id": "",
+    "usb_path": "",
+    "model": "Canon EOS 700D"
+  },
+  "printer": {
+    "queue": "PHOTO_A",
+    "preferred_make_model": "Epson L8050",
+    "device_uri": "",
+    "mac_address": "dc:cd:2f:ea:f5:a2"
+  },
+  "display": {
+    "connector": "",
+    "edid": ""
+  },
+  "touchscreen": {
+    "name": "",
+    "vendor_id": "",
+    "product_id": "",
+    "usb_path": "",
+    "map_to_connector": ""
+  }
+}
