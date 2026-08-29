@@ -35,7 +35,12 @@ class NativeCameraAgent {
             const child = spawn(config.CAMERA_AGENT_BIN, [], {
                 cwd: path.dirname(config.CAMERA_AGENT_BIN),
                 stdio: ['pipe', 'pipe', 'pipe'],
-                env: { ...process.env, LC_ALL: 'C' }
+                env: {
+                    ...process.env,
+                    LC_ALL: 'C',
+                    PHOTOBOX_CAMERA_PORT: config.CAMERA_PORT,
+                    PHOTOBOX_CAMERA_MODEL: config.CAMERA_MODEL
+                }
             });
             this.child = child;
             this.stdoutBuffer = '';

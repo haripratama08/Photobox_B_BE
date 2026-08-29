@@ -112,11 +112,13 @@ const runPreflight = async () => {
             message: camera.connected ? 'Kamera terdeteksi' : 'Kamera tidak terdeteksi'
         },
         camera_port: {
-            ok: !config.REQUIRE_CAMERA_PORT || Boolean(config.CAMERA_PORT),
+            ok: !config.REQUIRE_CAMERA_PORT || Boolean(config.CAMERA_PORT || config.CAMERA_MODEL),
             required: config.REQUIRE_CAMERA_PORT,
-            message: config.CAMERA_PORT
-                ? `Port kamera ${config.CAMERA_PORT}`
-                : 'Belum dikunci (isi CAMERA_PORT untuk 3 kamera)'
+            message: config.CAMERA_MODEL
+                ? `Kamera dikunci berdasarkan model ${config.CAMERA_MODEL}`
+                : (config.CAMERA_PORT
+                    ? `Port kamera ${config.CAMERA_PORT}`
+                    : 'Belum dikunci (isi CAMERA_MODEL atau CAMERA_PORT)')
         },
         printer: { ...printer, required: config.REQUIRE_PRINTER },
         storage: { ...storage, required: true },

@@ -71,6 +71,7 @@ module.exports = {
     PRINT_OFFSET_X_MM: Number(process.env.PRINT_OFFSET_X_MM || 0.5),
     PRINT_OFFSET_Y_MM: Number(process.env.PRINT_OFFSET_Y_MM || -1),
     CAMERA_PORT: process.env.CAMERA_PORT || '',
+    CAMERA_MODEL: process.env.CAMERA_MODEL || '',
     REQUIRE_CAMERA_PORT: process.env.REQUIRE_CAMERA_PORT !== 'false',
     REQUIRE_PRINTER: process.env.REQUIRE_PRINTER !== 'false',
     CAMERA_AGENT_ENABLED: process.env.CAMERA_AGENT_ENABLED !== 'false',

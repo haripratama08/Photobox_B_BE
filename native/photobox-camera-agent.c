@@ -52,6 +52,78 @@ static void close_camera(void) {
     camera_ready = 0;
 }
 
+/* Pilih kamera berdasarkan nama model yang stabil. Port USB hanya fallback
+ * karena nomor bus/device dapat berubah setelah cabut-pasang atau USB reset. */
+static int set_selected_camera(Camera *target) {
+    const char *model = getenv("PHOTOBOX_CAMERA_MODEL");
+    const char *port_path = getenv("PHOTOBOX_CAMERA_PORT");
+    CameraList *detected = NULL;
+    CameraAbilitiesList *abilities = NULL;
+    GPPortInfoList *port_list = NULL;
+    CameraAbilities camera_abilities;
+    GPPortInfo port_info;
+    const char *detected_model = NULL;
+    const char *detected_port = NULL;
+    int count;
+    int i;
+    int index;
+    int result;
+
+    if (model && *model) {
+        result = gp_list_new(&detected);
+        if (result < GP_OK) goto done;
+        result = gp_camera_autodetect(detected, context);
+        if (result < GP_OK) goto done;
+        count = gp_list_count(detected);
+        result = GP_ERROR_MODEL_NOT_FOUND;
+        for (i = 0; i < count; i++) {
+            const char *candidate_model = NULL;
+            const char *candidate_port = NULL;
+            if (gp_list_get_name(detected, i, &candidate_model) < GP_OK ||
+                gp_list_get_value(detected, i, &candidate_port) < GP_OK) continue;
+            if (strcmp(candidate_model, model) == 0) {
+                detected_model = candidate_model;
+                detected_port = candidate_port;
+                result = GP_OK;
+                break;
+            }
+        }
+        if (result < GP_OK) goto done;
+
+        result = gp_abilities_list_new(&abilities);
+        if (result < GP_OK) goto done;
+        result = gp_abilities_list_load(abilities, context);
+        if (result < GP_OK) goto done;
+        index = gp_abilities_list_lookup_model(abilities, detected_model);
+        if (index < GP_OK) { result = index; goto done; }
+        result = gp_abilities_list_get_abilities(abilities, index, &camera_abilities);
+        if (result < GP_OK) goto done;
+        result = gp_camera_set_abilities(target, camera_abilities);
+        if (result < GP_OK) goto done;
+        port_path = detected_port;
+    }
+
+    if (!port_path || !*port_path) { result = GP_OK; goto done; }
+
+    result = gp_port_info_list_new(&port_list);
+    if (result < GP_OK) return result;
+    result = gp_port_info_list_load(port_list);
+    if (result < GP_OK) goto done;
+    index = gp_port_info_list_lookup_path(port_list, port_path);
+    if (index < GP_OK) {
+        result = index;
+        goto done;
+    }
+    result = gp_port_info_list_get_info(port_list, index, &port_info);
+    if (result >= GP_OK) result = gp_camera_set_port_info(target, port_info);
+
+done:
+    if (detected) gp_list_free(detected);
+    if (abilities) gp_abilities_list_free(abilities);
+    if (port_list) gp_port_info_list_free(port_list);
+    return result;
+}
+
 static int ensure_camera(void) {
     int result;
     if (camera_ready && camera) return GP_OK;
@@ -59,6 +131,12 @@ static int ensure_camera(void) {
     close_camera();
     result = gp_camera_new(&camera);
     if (result < GP_OK) return result;
+
+    result = set_selected_camera(camera);
+    if (result < GP_OK) {
+        close_camera();
+        return result;
+    }
 
     result = gp_camera_init(camera, context);
     if (result < GP_OK) {

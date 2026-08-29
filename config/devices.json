@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "box_id": "Box A",
+  "box_id": "Box B",
   "camera": {
     "serial": "",
     "vendor_id": "04a9",
     "product_id": "",
-    "usb_path": "",
-    "model": "Canon EOS 700D"
+    "usb_path": "usb:003,002",
+    "model": "Canon EOS 100D"
   },
   "printer": {
-    "queue": "PHOTO_A",
+    "queue": "PHOTO_B",
     "preferred_make_model": "Epson L8050",
     "device_uri": "",
     "mac_address": "dc:cd:2f:ea:f5:a2"
   },
   "display": {
-    "connector": "",
+    "connector": "VGA-0",
     "edid": ""
   },
   "touchscreen": {
@@ -23,6 +23,6 @@
     "vendor_id": "",
     "product_id": "",
     "usb_path": "",
-    "map_to_connector": ""
+    "map_to_connector": "VGA-0"
   }
 }
