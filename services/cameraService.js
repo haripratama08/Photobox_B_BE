@@ -85,6 +85,18 @@ const resetCameraUsb = async (reason) => {
         for (let attempt = 1; attempt <= 6; attempt += 1) {
             await releaseDesktopCameraClaim();
             if (await detectCamera()) {
+                // USB terdeteksi belum berarti preflight dapat memakai kamera.
+                // Pastikan sesi persisten yang dipakai aplikasi juga berhasil.
+                if (nativeCameraAgent.enabled && nativeCameraAgent.available) {
+                    try {
+                        await nativeCameraAgent.ping();
+                    } catch (error) {
+                        console.log(`⚠️ [CAMERA AGENT] Verifikasi pemulihan gagal (${attempt}/6): ${error.message}`);
+                        await nativeCameraAgent.stop();
+                        await delay(1500);
+                        continue;
+                    }
+                }
                 cameraConnected = true;
                 console.log('✅ [LINUX CAMERA] Kamera pulih tanpa cabut kabel.');
                 return true;
@@ -126,6 +138,12 @@ async function getStatus() {
                 model: '🔴 Camera Agent belum dibangun'
             };
         }
+        if (cameraRecoveryPromise) {
+            return {
+                connected: false,
+                model: `🟡 Camera Agent sedang memulihkan ${config.BOX_ID}`
+            };
+        }
         try {
             await releaseDesktopCameraClaim();
             await nativeCameraAgent.ping();
@@ -136,6 +154,7 @@ async function getStatus() {
             };
         } catch (error) {
             cameraConnected = false;
+            console.log(`⚠️ [CAMERA AGENT] Inisialisasi gagal: ${error.message}`);
             resetCameraUsb('inisialisasi Camera Agent gagal').catch(() => {});
             return {
                 connected: false,
