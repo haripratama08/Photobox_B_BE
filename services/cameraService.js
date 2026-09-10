@@ -12,8 +12,9 @@ let targetLiveViewFps = Math.max(1, Math.min(120, config.LIVEVIEW_TARGET_FPS));
 let liveViewGeneration = 0;
 
 const cameraArgs = (args) => {
-    if (!config.CAMERA_PORT) return args;
-    return ['--port', config.CAMERA_PORT, ...args];
+    if (config.CAMERA_PORT) return ['--port', config.CAMERA_PORT, ...args];
+    if (config.CAMERA_MODEL) return ['--camera', config.CAMERA_MODEL, ...args];
+    return args;
 };
 
 const runGphoto = (args, options, callback) => {

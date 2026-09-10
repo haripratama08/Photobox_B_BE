@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const { execFile } = require('child_process');
 const config = require('../config/config');
+const nativeCameraAgent = require('./nativeCameraAgent');
 
 const run = (command, args = [], timeout = 5000) => new Promise((resolve) => {
     execFile(command, args, { timeout, encoding: 'utf8' }, (error, stdout = '', stderr = '') => {
@@ -14,6 +15,29 @@ const readConfig = () => {
 };
 
 async function cameras() {
+    // Jangan memanggil gphoto2 dari proses lain saat native camera agent aktif.
+    // gphoto2 membuka sesi PTP baru dan dapat memutus sesi persisten yang dipakai
+    // liveview/capture, sehingga status terlihat offline walau kamera terpasang.
+    if (nativeCameraAgent.enabled && nativeCameraAgent.available) {
+        try {
+            await nativeCameraAgent.ping();
+            return {
+                connected: true,
+                devices: [{
+                    model: config.CAMERA_MODEL || 'Kamera terkonfigurasi',
+                    port: config.CAMERA_PORT || null,
+                    connected: true
+                }]
+            };
+        } catch (error) {
+            return {
+                connected: false,
+                devices: [],
+                error: error.message
+            };
+        }
+    }
+
     const result = await run('gphoto2', ['--auto-detect']);
     const lines = result.stdout.split(/\r?\n/).filter(Boolean);
     const devices = lines.filter((line) => /Canon|Nikon|Sony|Fuji|camera/i.test(line) && !/^Model\s+Port/i.test(line))
