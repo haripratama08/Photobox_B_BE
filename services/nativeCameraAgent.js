@@ -50,6 +50,10 @@ class NativeCameraAgent {
             child.stderr.on('data', (data) => {
                 this.stderrText = `${this.stderrText}${data.toString()}`.slice(-8000);
             });
+            // Saat USB/PTP diputus, proses native dapat selesai tepat ketika
+            // request berikutnya ditulis. Tanpa listener ini Node menganggap
+            // EPIPE dari stdin sebagai error tak tertangani dan mematikan API.
+            child.stdin.on('error', (error) => this.handleExit(error, child));
             child.on('error', (error) => this.handleExit(error, child));
             child.on('close', (code, signal) => {
                 this.handleExit(new Error(
@@ -107,7 +111,8 @@ class NativeCameraAgent {
     }
 
     requestRaw(command, args = [], timeoutMs = 15000) {
-        if (!this.running || !this.child.stdin.writable) {
+        const child = this.child;
+        if (!this.running || !child?.stdin?.writable) {
             return Promise.reject(new Error('Camera agent tidak berjalan.'));
         }
         const fields = args.map((value) => String(value));
@@ -123,7 +128,19 @@ class NativeCameraAgent {
             }, timeoutMs);
             timer.unref?.();
             this.pending.set(id, { resolve, reject, timer });
-            this.child.stdin.write([id, command, ...fields].join('\t') + '\n');
+            try {
+                child.stdin.write(
+                    [id, command, ...fields].join('\t') + '\n',
+                    (error) => {
+                        if (!error) return;
+                        this.handleExit(error, child);
+                    }
+                );
+            } catch (error) {
+                // write() juga dapat melempar sinkron bila stream sudah
+                // dihancurkan di antara pengecekan writable dan pemanggilan.
+                this.handleExit(error, child);
+            }
         });
     }
 
